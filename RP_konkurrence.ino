@@ -44,7 +44,12 @@ void loop() {
       moveForward(100);
    }
    stop();
-   alignAndCorrect();
+   alignAndCorrect(); // Assures that the Zumo robot is almost perpendicular to the white line.
+   
+   //Move the robot slightly forward and turn 90 degres
+
+   
+   
 }
 
 
@@ -54,6 +59,10 @@ void moveForward(int fart) {
 
 void stop() {
   motors.setSpeeds(0,0);
+}
+
+void faceTowardIR() {
+  
 }
 
 void readSensors(LineSensorsWhite &state){
