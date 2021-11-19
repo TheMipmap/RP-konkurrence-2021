@@ -47,6 +47,10 @@ int lineSensorValues[NUM_SENSORS];
 // White threshold; white returns values lower than this.
 int threshold[NUM_SENSORS] = {300,200,160,200,230}; //{270,160,120,160,200};
 
+
+// White threshold on belt
+int thresholdBelt[NUM_SENSORS] = {0,0,0,0,0};
+
 // Bool to turn_on/off the sensors
 bool useEmitters = true;  
 
@@ -69,6 +73,17 @@ bool R;
 LineSensorsWhite sensorsState = {0,0,0,0,0};
 
 
+bool canRemoved = 0;
+
+// Variables for position of the zumo
+const int vector_max = 5;
+
+double storage_vector[vector_max][2];
+
+int angleFromStart = 0;
+
+
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);  // Start the serial-communication between the robot and the computer.
@@ -88,41 +103,25 @@ void setup() {
 
 void loop() {
 
-   if (stage == 1) {
-       //Read the data from the lineSensors
-      readSensors(sensorsState);
-   
-       // if none of the sensors are white, moveforward until one of them is true
-       moveUntilLine();
-   
-       // Correct the robot if it approaces at a angle that is not 90 deg
-       alignAndCorrect(); // Assures that the Zumo robot is almost perpendicular to the white line.
-   
-      //Move the robot slightly forward so that it stands on top of the line and turn 90 degres
-       faceTowardIR();
-
-      // Move forward until left and right lineSensors detect white. 
-       followLine();
+  if (stage == 1) {
+    findLineAndIRSensor();
   }
   if (stage == 2) {
-    lcd.clear();
-    lcd.print("ELIAS");
     detectCan();
   }
   
   if (stage == 3) {
-    lcd.clear();
-    delay(100);
-    lcd.print("Small");
-    delay(1000);
+    removeSmallCan();
+    canRemoved = 0;
   }
 
   if (stage == 4) {
     removeBigCan();
+    canRemoved = 1;
   }
 
   if (stage == 5) {
-    
+    hardCodeReturn();
   }
 }
 
@@ -132,10 +131,12 @@ void loop() {
 //
 //
 
+
 void calibrateThreshold() {
     //local variabel til sorte og hvide værdier
     int black[NUM_SENSORS] = {0,0,0,0,0};
     int white[NUM_SENSORS] = {0,0,0,0,0};
+    int belt[NUM_SENSORS] = {0,0,0,0,0};
     
     //print "Placer over 'sort' og tryk på button A"
     lcd.clear();
@@ -165,17 +166,54 @@ void calibrateThreshold() {
     buttonA.waitForRelease();
     readSensors(sensorsState);
     printSensorValues();
+
+    //lcd skal sige "placer ved start"
+    lcd.clear();
+    lcd.print("Place");
+    lcd.gotoXY(0,1);
+    lcd.print("belt");
     
     // gem de hvide værdier
     for (int i = 0; i < 5; i++) {
       white[i] = lineSensorValues[i];
      }
+
+  /*  //print "placer over beltet og tryk på button A"
+    lcd.clear();
+    lcd.print("Place");
+    lcd.gotoXY(0,1);
+    lcd.print("belt");
+
+    // vent på button a og aflæs sensorer
+    buttonA.waitForPress();
+    buttonA.waitForRelease();
+    readSensors(sensorsState);
+    printSensorValues();
     
-    //læg værdierne sammen parvis, og divider med 2, brug derefter dette som threshold
+    // gem beltets værdier
+    for (int i = 0; i < 5; i++) {
+      belt[i] = lineSensorValues[i];
+     }
+     */
+
+    //lcd skal sige "placer ved start"
+    lcd.clear();
+    lcd.print("Place");
+    lcd.gotoXY(0,1);
+    lcd.print("start");
+    
+    
+    //læg hvid og sort sammen parvis, og divider med 2, brug derefter dette som threshold
     for (int i = 0; i < 5; i++) {
       threshold[i] = (black[i] + white[i])/2;
     }   
     Serial.println(String(threshold[0]) + ", " + String(threshold[1]) + ", " + String(threshold[2]) +", " + String(threshold[3]) + ", " + String(threshold[4]));
+
+    //læg belt og hvid sammen parvis ....
+    for (int i = 0; i < 5; i++) {
+      thresholdBelt[i] = white[i] + 30;
+    } 
+   
 }
 
 void moveUntilLine() {
@@ -199,7 +237,7 @@ void moveForward(int fart, double distance) {
   }
   motors.setSpeeds(0,0);
   globalMovement = 0;
-  counts = encoders.getCountsAndResetLeft();
+ // counts = encoders.getCountsAndResetLeft();
 }
 
 void moveForwardNoStop(int fart) {
@@ -235,7 +273,7 @@ void turn(int fart, int grader, char direction) {
 //
 
 void faceTowardIR() {
-  moveForward(50,4.4);
+  moveForward(50,6);
   turn(100, 90,'r');
 }
 
@@ -245,11 +283,21 @@ void readSensors(LineSensorsWhite &state){
     lineSensors.read(lineSensorValues, useEmitters ? QTR_EMITTERS_ON : QTR_EMITTERS_OFF); 
 
     // In the following lines use the values of the sensors to update the struct
+    if (stage < 3) {
+      
     if (lineSensorValues[0] < threshold[0]) sensorsState.L = 1;
     if (lineSensorValues[1] < threshold[1]) sensorsState.LC = 1;
     if (lineSensorValues[2] < threshold[2]) sensorsState.LC = 1;
     if (lineSensorValues[3] < threshold[3]) sensorsState.RC = 1;
     if (lineSensorValues[4] < threshold[4]) sensorsState.R = 1;
+    } else {
+      
+    if (lineSensorValues[0] < thresholdBelt[0]) sensorsState.L = 1;
+    if (lineSensorValues[1] < thresholdBelt[1]) sensorsState.LC = 1;
+    if (lineSensorValues[2] < thresholdBelt[2]) sensorsState.LC = 1;
+    if (lineSensorValues[3] < thresholdBelt[3]) sensorsState.RC = 1;
+    if (lineSensorValues[4] < thresholdBelt[4]) sensorsState.R = 1;
+    }
 }
 
 void alignAndCorrect() {
@@ -397,7 +445,6 @@ void followLine() {
     printSensorValues();
   } while(!sensorsState.L || !sensorsState.R);
   alignAndCorrect();
-  stage = 2;
 }
 
 
@@ -415,7 +462,7 @@ void detectCan(){
     int proximityRight = proxSensors.countsFrontWithRightLeds(); //Retrieves the values from the read
     Serial.println("proxLeft: " + String(proximityLeft) + " // " + "proxRight: " + String(proximityRight));
     //Serial print for analysis
-    if(proximityRight && proximityLeft >= 1){ //checks if it passes the threshold for the smallest can
+    if(proximityRight && proximityLeft >= 3){ //checks if it passes the threshold for the smallest can
       lineSensors.emittersOn();
       delay(400); //delay to let the can pass in front of the robot to avoid wrong decision from preliminary reading.
       lineSensors.emittersOff();
@@ -451,14 +498,71 @@ void removeBigCan() {
     turn(100, 90, 'r'); //Turn 90 degreees to the right
     moveForward(150, 27); //move forward for 35 cm
     turn(100, 90, 'l'); //Turn left 90 degrees times 2 (can't pick 180, cause then it just changes from 179 to -180 and not 180.
-    moveForward(100, 15);
+    moveForward(100, 20);
     turn(100, 90, 'l');
     delay(50);
     
     //Stop when line is detected then align with line
     moveUntilLine();
     alignAndCorrect();
-
+    
     //Jump to stage 5
     stage = 5;
 }
+
+void removeSmallCan() {
+  lcd.clear();
+  delay(100);
+  lcd.print("Small");
+  delay(50);
+  moveForward(100, 10.0);
+  moveUntilLine();
+  delay(50);
+  stage = 5;
+}
+
+void findLineAndIRSensor() {
+         //Read the data from the lineSensors
+      readSensors(sensorsState);
+   
+       // if none of the sensors are white, moveforward until one of them is true
+       moveUntilLine();
+       
+       // Correct the robot if it approaces at a angle that is not 90 deg
+       alignAndCorrect(); // Assures that the Zumo robot is almost perpendicular to the white line.
+       
+      //Move the robot slightly forward so that it stands on top of the line and turn 90 degres
+       faceTowardIR();
+
+      // Move forward until left and right lineSensors detect white. 
+       followLine();
+
+      // Move forward to make sure IR sensor registers the shining light
+        moveForward(100,0.5);
+
+      //Move to next stage
+        stage = 2;
+ }
+
+
+ void hardCodeReturn(){
+    if(canRemoved == 0){
+      turn(100, 135, 'r');
+      moveForward(100, 30);
+      turn(100, 45, 'r');
+      moveForward(100, 10);
+      turn(100, 90, 'r');
+    }
+    else if(canRemoved == 1){
+      turn(100, 180, 'r');
+      moveForward(100, 45);
+      turn(100, 90, 'r');
+      moveForward(100, 20);
+      turn(100, 90, 'r');
+    }
+    else{
+      lcd.clear();
+      lcd.print("Error");
+    }
+    stage = 1;
+  }
