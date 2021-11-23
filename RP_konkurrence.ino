@@ -104,23 +104,28 @@ void setup() {
 void loop() {
 
   if (stage == 1) {
+    displayStage();
     findLineAndIRSensor();
   }
   if (stage == 2) {
+    displayStage();
     detectCan();
   }
   
   if (stage == 3) {
+    displayStage();
     removeSmallCan();
     canRemoved = 0;
   }
 
   if (stage == 4) {
+    displayStage();
     removeBigCan();
     canRemoved = 1;
   }
 
   if (stage == 5) {
+    displayStage();
     hardCodeReturn();
   }
 }
@@ -131,6 +136,12 @@ void loop() {
 //
 //
 
+void displayStage() {
+    lcd.clear();
+    lcd.print("Stage: ");
+    lcd.gotoXY(0,1);
+    lcd.print(String(stage));
+}
 
 void calibrateThreshold() {
     //local variabel til sorte og hvide værdier
@@ -178,24 +189,6 @@ void calibrateThreshold() {
       white[i] = lineSensorValues[i];
      }
 
-  /*  //print "placer over beltet og tryk på button A"
-    lcd.clear();
-    lcd.print("Place");
-    lcd.gotoXY(0,1);
-    lcd.print("belt");
-
-    // vent på button a og aflæs sensorer
-    buttonA.waitForPress();
-    buttonA.waitForRelease();
-    readSensors(sensorsState);
-    printSensorValues();
-    
-    // gem beltets værdier
-    for (int i = 0; i < 5; i++) {
-      belt[i] = lineSensorValues[i];
-     }
-     */
-
     //lcd skal sige "placer ved start"
     lcd.clear();
     lcd.print("Place");
@@ -211,7 +204,7 @@ void calibrateThreshold() {
 
     //læg belt og hvid sammen parvis ....
     for (int i = 0; i < 5; i++) {
-      thresholdBelt[i] = white[i] + 30;
+      thresholdBelt[i] = white[i] + 5;
     } 
    
 }
@@ -237,7 +230,7 @@ void moveForward(int fart, double distance) {
   }
   motors.setSpeeds(0,0);
   globalMovement = 0;
- // counts = encoders.getCountsAndResetLeft();
+  counts = encoders.getCountsAndResetLeft();
 }
 
 void moveForwardNoStop(int fart) {
@@ -285,18 +278,19 @@ void readSensors(LineSensorsWhite &state){
     // In the following lines use the values of the sensors to update the struct
     if (stage < 3) {
       
-    if (lineSensorValues[0] < threshold[0]) sensorsState.L = 1;
-    if (lineSensorValues[1] < threshold[1]) sensorsState.LC = 1;
-    if (lineSensorValues[2] < threshold[2]) sensorsState.LC = 1;
-    if (lineSensorValues[3] < threshold[3]) sensorsState.RC = 1;
-    if (lineSensorValues[4] < threshold[4]) sensorsState.R = 1;
+    sensorsState.L = (lineSensorValues[0] < threshold[0]) ? 1 : 0;
+    sensorsState.LC = (lineSensorValues[1] < threshold[1]) ? 1 : 0;
+    sensorsState.C = (lineSensorValues[2] < threshold[2]) ? 1 : 0;
+    sensorsState.RC = (lineSensorValues[3] < threshold[3]) ? 1 : 0;
+    sensorsState.R = (lineSensorValues[4] < threshold[4]) ? 1 : 0;
+    
     } else {
       
-    if (lineSensorValues[0] < thresholdBelt[0]) sensorsState.L = 1;
-    if (lineSensorValues[1] < thresholdBelt[1]) sensorsState.LC = 1;
-    if (lineSensorValues[2] < thresholdBelt[2]) sensorsState.LC = 1;
-    if (lineSensorValues[3] < thresholdBelt[3]) sensorsState.RC = 1;
-    if (lineSensorValues[4] < thresholdBelt[4]) sensorsState.R = 1;
+    sensorsState.L = (lineSensorValues[0] < thresholdBelt[0]) ? 1 : 0;
+    sensorsState.LC = (lineSensorValues[1] < thresholdBelt[1]) ? 1 : 0;
+    sensorsState.C = (lineSensorValues[2] < thresholdBelt[2]) ? 1 : 0;
+    sensorsState.RC = (lineSensorValues[3] < thresholdBelt[3]) ? 1 : 0;
+    sensorsState.R = (lineSensorValues[4] < thresholdBelt[4]) ? 1 : 0;
     }
 }
 
@@ -317,7 +311,7 @@ void alignAndCorrect() {
       case 0:
       while(!sensorsState.R) {
         readSensors(sensorsState);
-        motors.setSpeeds(0,100);
+        motors.setSpeeds(-70,100);
       }
       stop();
       break;
@@ -325,7 +319,7 @@ void alignAndCorrect() {
       case 1:
       while(!sensorsState.L) {
         readSensors(sensorsState);
-        motors.setSpeeds(100,0);
+        motors.setSpeeds(100,-70);
       }
       stop();
       break;
@@ -435,9 +429,9 @@ void followLine() {
   sensorsState.R = 0;
   do {
     if (lineSensorValues[3] > threshold[3] * 1.1) {
-      motors.setSpeeds(20,80);
+      motors.setSpeeds(20,100);
     } else if (lineSensorValues[3] < threshold[3] * 0.9) {
-      motors.setSpeeds(80,20);
+      motors.setSpeeds(100,20);
     } else {
       motors.setSpeeds(60,60);
     }
@@ -469,15 +463,15 @@ void detectCan(){
       proxSensors.read();
       int proximityLeft = proxSensors.countsFrontWithLeftLeds();
       int proximityRight = proxSensors.countsFrontWithRightLeds(); //reads sensors and updates the value, since the can is now more in front of the robot
-      if(proximityRight && proximityLeft >= 5){ //Checks if it is a big can
+      if(proximityRight && proximityLeft >= 7){ //Checks if it is a big can
         canType = 2; //Define can as type 2 = big can
-        Serial.println("Last reading: proxLeft: " + String(proximityLeft) + " // " + "proxRight: " + String(proximityRight)); //Check what value triggered the if statement. Used for debugging
+        Serial.println("Last reading big: proxLeft: " + String(proximityLeft) + " // " + "proxRight: " + String(proximityRight)); //Check what value triggered the if statement. Used for debugging
         stage = 4;
         break; //Can is identified: exit the void
       }
       else
       canType = 1; //Since it wasn't a big can, define it as can 1 = small can
-      Serial.println("Last reading: proxLeft: " + String(proximityLeft) + " // " + "proxRight: " + String(proximityRight)); //Check what value triggered the if statement. Used for debugging
+      Serial.println("Last reading small: proxLeft: " + String(proximityLeft) + " // " + "proxRight: " + String(proximityRight)); //Check what value triggered the if statement. Used for debugging
       stage = 3;
       break; //Can is identified: exit the void
     }
@@ -492,7 +486,7 @@ void detectCan(){
 void removeBigCan() {
     //display that big can is found
     lcd.clear();
-    lcd.print("Big can!");
+    lcd.print("Big can");
     
     // navigate behind big can
     turn(100, 90, 'r'); //Turn 90 degreees to the right
@@ -513,7 +507,7 @@ void removeBigCan() {
 void removeSmallCan() {
   lcd.clear();
   delay(100);
-  lcd.print("Small");
+  lcd.print("smallCan");
   delay(50);
   moveForward(100, 10.0);
   moveUntilLine();
@@ -534,7 +528,7 @@ void findLineAndIRSensor() {
       //Move the robot slightly forward so that it stands on top of the line and turn 90 degres
        faceTowardIR();
 
-      // Move forward until left and right lineSensors detect white. 
+      // Move forward until left or right lineSensors detect white. 
        followLine();
 
       // Move forward to make sure IR sensor registers the shining light
@@ -557,7 +551,7 @@ void findLineAndIRSensor() {
       turn(100, 180, 'r');
       moveForward(100, 45);
       turn(100, 90, 'r');
-      moveForward(100, 20);
+      moveForward(100, 25);
       turn(100, 90, 'r');
     }
     else{
