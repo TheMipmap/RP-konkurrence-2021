@@ -1,6 +1,6 @@
 #include<Wire.h>
 #include<Zumo32U4.h> //Include the needed libraries
-#define NUM_SENSORS 5
+#define NUM_SENSORS 5 //Definition of the number of line following sensors used. Used in different functions.
 
 
 Zumo32U4Motors motors;
@@ -70,10 +70,11 @@ bool RC;
 bool R;
 };
 
+//The different states of the sensors. Either white or black.
 LineSensorsWhite sensorsState = {0,0,0,0,0};
 
-
-bool canRemoved = 0;
+//Variable for checking which type of can was last removed.
+bool canRemoved = 0; 
 
 // Variables for position of the zumo
 const int vector_max = 5;
@@ -85,11 +86,10 @@ int angleFromStart = 0;
 
 
 void setup() {
-  // put your setup code here, to run once:
   Serial.begin(9600);  // Start the serial-communication between the robot and the computer.
   lineSensors.initFiveSensors(); // Initialize the 5 lineSensors.
   proxSensors.initFrontSensor(); //Activates the front proximity sensor
-  for(int i = 0; i<6; i++){ //This loop fills up our array with numbers from 1-7
+  for(int i = 0; i<6; i++){ //This loop fills up the proximity array with numbers from 1-7
     brightnessLevels[i] = i + 1;
   }
   proxSensors.setBrightnessLevels(brightnessLevels, 7); //This loop changes our brightness values to our custom ones, instead of the default ones. Default is too inaccurate for our usecase.
@@ -103,6 +103,8 @@ void setup() {
 
 void loop() {
 
+  //This loop determines where in the program we are, and launches the relevant void function.
+  
   if (stage == 1) {
     displayStage();
     findLineAndIRSensor();
@@ -209,6 +211,7 @@ void calibrateThreshold() {
    
 }
 
+//Function for moving until a line is detected.
 void moveUntilLine() {
   moveForwardNoStop(100);
   sensorsState = {0,0,0,0,0};
@@ -233,14 +236,16 @@ void moveForward(int fart, double distance) {
   counts = encoders.getCountsAndResetLeft();
 }
 
+//Function for moving forward with no stop.
 void moveForwardNoStop(int fart) {
   motors.setSpeeds(fart,fart);
 }
 
+//Function for stopping the motors.
 void stop() {
   motors.setSpeeds(0,0);
 }
-
+//Function for turning with a set speed, degrees and direction of turn.
 void turn(int fart, int grader, char direction) {
   if (direction == 'l' || direction == 'L') {
        turnSensorReset();
@@ -294,6 +299,7 @@ void readSensors(LineSensorsWhite &state){
     }
 }
 
+//Function for aligning with a detected line, and place the robot perpendicular.
 void alignAndCorrect() {
     Serial.println("alignAndCorrect");
     //Find out which lineSensors that turned white
@@ -422,8 +428,7 @@ void turnSensorUpdate()
   turnAngle += (int64_t)d * 14680064 / 17578125;
 }
 
-
-
+//Function for following a white line.
 void followLine() {
   sensorsState.L = 0;
   sensorsState.R = 0;
@@ -449,6 +454,7 @@ void followLine() {
 //
 //
 
+//Function for detecting which type of can is in front of the robot. Either big or small.
 void detectCan(){
   while(true){
     proxSensors.read(); //Reads proximity sensors
@@ -458,7 +464,7 @@ void detectCan(){
     //Serial print for analysis
     if(proximityRight && proximityLeft >= 3){ //checks if it passes the threshold for the smallest can
       lineSensors.emittersOn();
-      delay(400); //delay to let the can pass in front of the robot to avoid wrong decision from preliminary reading.
+      delay(400); //delay to let the can pass in front of the robot to avoid wrong decision based on preliminary reading.
       lineSensors.emittersOff();
       proxSensors.read();
       int proximityLeft = proxSensors.countsFrontWithLeftLeds();
@@ -538,25 +544,25 @@ void findLineAndIRSensor() {
         stage = 2;
  }
 
-
+//Function for returning home depending on which can was just removed. Does not use any sensors.
  void hardCodeReturn(){
-    if(canRemoved == 0){
+    if(canRemoved == 0){ //If the can removed is 0 (small can), then it will return home using the following functions:
       turn(100, 135, 'r');
       moveForward(100, 30);
       turn(100, 45, 'r');
       moveForward(100, 10);
       turn(100, 90, 'r');
     }
-    else if(canRemoved == 1){
+    else if(canRemoved == 1){ //If the can removed is 1 (big can), then it will return home using the following functions:
       turn(100, 180, 'r');
       moveForward(100, 45);
       turn(100, 90, 'r');
       moveForward(100, 25);
       turn(100, 90, 'r');
     }
-    else{
+    else{ //If none of these statements work, return an error message on the lcd.
       lcd.clear();
       lcd.print("Error");
     }
-    stage = 1;
+    stage = 1; //Set the stage to the first one, so the program starts over from the beginning
   }
