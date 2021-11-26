@@ -16,7 +16,6 @@ the robot has turned since the last time turnSensorReset was
 called.  This is computed solely using the Z axis of the gyro, so
 it could be inaccurate if the robot is rotated about the X or Y
 axes.
-
 Our convention is that a value of 0x20000000 represents a 45
 degree counter-clockwise rotation.  This means that a uint32_t
 can represent any angle between 0 degrees and 360 degrees.  If
@@ -207,7 +206,7 @@ void calibrateThreshold() {
 }
 
 void moveUntilLine() {
-  moveForwardNoStop(globalSpeed);
+  moveForwardNoStop(300);
   sensorsState = {0,0,0,0,0};
   while(!sensorsState.L && !sensorsState.LC && !sensorsState.C &&!sensorsState.RC && !sensorsState.R) {
        readSensors(sensorsState);
@@ -231,12 +230,17 @@ void moveForward(int fart, double distance) {
 }
 
 
-void moveBackwards(int fart, double distance) {
+void moveBackwards(double fart, double distance) {
   double globalMovement = 0; //initierer variabler med globalMovement og counts
   double counts = encoders.getCountsAndResetLeft(); //Resetter venstre encoder og sætter counts til det førhenværende antal counts
   counts = encoders.getCountsLeft(); // Henter den resettede encoder-data (Skulle gerne være 0)
   globalMovement = (counts/900) * PI * 3.9;
-  motors.setSpeeds(-fart,-fart);
+  int fartLeft = fart * 1.02;
+  if(canRemoved == 0){
+    motors.setSpeeds(-fartLeft,-fart);
+  } else if(canRemoved == 1){
+    motors.setSpeeds(-fart,-fart);
+  }
   while (abs(globalMovement) < distance) {
     counts = encoders.getCountsLeft();
     globalMovement = (counts/900) * PI * 3.9;
@@ -524,9 +528,9 @@ void removeSmallCan() {
   delay(100);
   lcd.print("Small");
   delay(50);
-  moveForward(globalSpeed, 10.0);
-  moveUntilLine();
-  delay(50);
+  moveForward(globalSpeed, 25);
+  //moveUntilLine();
+  delay(150);
   stage = 5;
 }
 
@@ -559,12 +563,13 @@ void findLineAndIRSensor() {
 
  void hardCodeReturn(){
     if(canRemoved == 0){
-        moveBackwards(400, 35);      
+        moveBackwards(300, 38);
+        delay(100);      
     }
     else if(canRemoved == 1){
       moveBackwards(globalSpeed,25);
       turn(globalTurn, 90, 'l');
-      moveForward(globalSpeed, 22);
+      moveForward(globalSpeed, 25);
       turn(globalTurn, 90, 'r');
     }
     else{
