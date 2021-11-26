@@ -495,7 +495,7 @@ void detectCan(){
       break; //Can is identified: exit the void
     }
     lineSensors.emittersOn();
-    delay(50);
+    delay(100);
     lineSensors.emittersOff();
   }
   //if none of the requirements are fulfilled, it loops back.
@@ -553,7 +553,7 @@ void findLineAndIRSensor() {
        followLine();
 
       // Move forward to make sure IR sensor registers the shining light
-        moveForward(100,0.5);
+        moveForward(100,0.4);
 
       //Move to next stage
         stage = 2;
