@@ -235,9 +235,11 @@ void moveBackwards(double fart, double distance) {
   double counts = encoders.getCountsAndResetLeft(); //Resetter venstre encoder og sætter counts til det førhenværende antal counts
   counts = encoders.getCountsLeft(); // Henter den resettede encoder-data (Skulle gerne være 0)
   globalMovement = (counts/900) * PI * 3.9;
-  int fartLeft = fart * 1.02;
+  int fartLeft = fart * 1.1;
   if(canRemoved == 0){
     motors.setSpeeds(-fartLeft,-fart);
+    lcd.clear();
+    lcd.print("canR = 0");
   } else if(canRemoved == 1){
     motors.setSpeeds(-fart,-fart);
   }
@@ -563,7 +565,7 @@ void findLineAndIRSensor() {
 
  void hardCodeReturn(){
     if(canRemoved == 0){
-        moveBackwards(300, 38);
+        moveBackwards(200, 38);
         delay(100);      
     }
     else if(canRemoved == 1){
