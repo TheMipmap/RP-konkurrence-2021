@@ -222,17 +222,16 @@ void moveUntilLine() {
 }
 
 void moveForward(int fart, double distance) {
-  double globalMovement = 0; //initierer variabler med globalMovement og counts
+  double localMovement = 0; //initierer variabler med localMovement og counts
   double counts = encoders.getCountsAndResetLeft(); //Resetter venstre encoder og sætter counts til det førhenværende antal counts
   counts = encoders.getCountsLeft(); // Henter den resettede encoder-data (Skulle gerne være 0)
-  globalMovement = (counts/900) * PI * 3.9;
+  localMovement = (counts/900) * PI * 3.9;
   motors.setSpeeds(fart,fart);
-  while (globalMovement < distance) {
+  while (localMovement < distance) {
     counts = encoders.getCountsLeft();
-    globalMovement = (counts/900) * PI * 3.9;
+    localMovement = (counts/900) * PI * 3.9;
   }
   motors.setSpeeds(0,0);
-  globalMovement = 0;
   counts = encoders.getCountsAndResetLeft();
 }
 
@@ -276,8 +275,8 @@ void faceTowardIR() {
 }
 
 void readSensors(LineSensorsWhite &state){
+   
     // Next line reads the sensor values and store them in the array lineSensorValues 
-
     lineSensors.read(lineSensorValues, useEmitters ? QTR_EMITTERS_ON : QTR_EMITTERS_OFF); 
 
     // In the following lines use the values of the sensors to update the struct
@@ -565,4 +564,4 @@ void findLineAndIRSensor() {
       lcd.print("Error");
     }
     stage = 1; //Set the stage to the first one, so the program starts over from the beginning
-  }
+}
