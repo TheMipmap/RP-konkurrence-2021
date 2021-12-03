@@ -57,7 +57,7 @@ bool useEmitters = true;
 
 int canType; //Variable for determining can size. Value 0 is no can, 1 is small can, 2 is big can.
 
-unsigned int brightnessLevels[6]; //Array which the setBrightnessLevels function retrieves its brightness levels from
+unsigned int brightnessLevels[7]; //Array which the setBrightnessLevels function retrieves its brightness levels from
 
 //Variable for the robots stage
 int stage = 1;
@@ -89,8 +89,10 @@ void setup() {
   Serial.begin(9600);  // Start the serial-communication between the robot and the computer.
   lineSensors.initFiveSensors(); // Initialize the 5 lineSensors.
   proxSensors.initFrontSensor(); //Activates the front proximity sensor
-  for(int i = 0; i<6; i++){ //This loop fills up the proximity array with numbers from 1-7
+  delay(4000);
+  for(int i = 0; i<7; i++){ //This loop fills up the proximity array with numbers from 1-7
     brightnessLevels[i] = i + 1;
+    Serial.println("Brightness level" + String(i) + " = " + String(brightnessLevels[i]));
   }
   proxSensors.setBrightnessLevels(brightnessLevels, 7); //This loop changes our brightness values to our custom ones, instead of the default ones. Default is too inaccurate for our usecase.
   calibrateThreshold();
