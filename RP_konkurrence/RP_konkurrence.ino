@@ -86,15 +86,24 @@ int angleFromStart = 0;
 
 
 void setup() {
-  Serial.begin(9600);  // Start the serial-communication between the robot and the computer.
-  lineSensors.initFiveSensors(); // Initialize the 5 lineSensors.
-  proxSensors.initFrontSensor(); //Activates the front proximity sensor
-  delay(4000);
-  for(int i = 0; i<7; i++){ //This loop fills up the proximity array with numbers from 1-7
+  // Start the serial-communication between the robot and the computer.
+  Serial.begin(9600);
+  
+  // Initialize the 5 lineSensors.
+  lineSensors.initFiveSensors();
+  
+  //Activates the front proximity sensor
+  proxSensors.initFrontSensor();
+  
+  //This loop fills up the proximity array with numbers from 1-7
+  for(int i = 0; i<7; i++){ 
     brightnessLevels[i] = i + 1;
     Serial.println("Brightness level" + String(i) + " = " + String(brightnessLevels[i]));
   }
-  proxSensors.setBrightnessLevels(brightnessLevels, 7); //This loop changes our brightness values to our custom ones, instead of the default ones. Default is too inaccurate for our usecase.
+  
+  //This loop changes our brightness values to our custom ones, instead of the default ones. Default is too inaccurate for our usecase.
+  proxSensors.setBrightnessLevels(brightnessLevels, 7);
+  
   calibrateThreshold();
   buttonA.waitForPress();
   buttonA.waitForRelease();
@@ -134,18 +143,20 @@ void loop() {
   }
 }
 
-//
-//
-// Functions involving general movements of the robot
-//
-//
-
+//Function for displaying which stage the robot is in. Called during every stage in the main loop.
 void displayStage() {
     lcd.clear();
     lcd.print("Stage: ");
     lcd.gotoXY(0,1);
     lcd.print(String(stage));
 }
+
+//
+//
+// Functions involving general movements of the robot
+//
+//
+
 
 void calibrateThreshold() {
     //local variabel til sorte og hvide værdier
