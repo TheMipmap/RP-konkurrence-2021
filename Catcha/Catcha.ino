@@ -482,7 +482,7 @@ void detectCan(){
       proxSensors.read();
       int proximityLeft = proxSensors.countsFrontWithLeftLeds();
       int proximityRight = proxSensors.countsFrontWithRightLeds(); //reads sensors and updates the value, since the can is now more in front of the robot
-      if(proximityRight && proximityLeft >= 6){ //Checks if it is a big can
+      if(proximityRight && proximityLeft >= 7){ //Checks if it is a big can
         canType = 2; //Define can as type 2 = big can
         Serial.println("Last reading: proxLeft: " + String(proximityLeft) + " // " + "proxRight: " + String(proximityRight)); //Check what value triggered the if statement. Used for debugging
         stage = 4;
@@ -569,7 +569,7 @@ void findLineAndIRSensor() {
     else if(canRemoved == 1){
       moveBackwards(globalSpeed,25);
       turn(globalTurn, 90, 'l');
-      moveForward(globalSpeed, 25);
+      moveForward(globalSpeed, 20);
       turn(globalTurn, 90, 'r');
     }
     else{
