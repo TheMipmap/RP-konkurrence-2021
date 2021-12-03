@@ -435,9 +435,9 @@ void followLine() {
   sensorsState.R = 0;
   do {
     if (lineSensorValues[3] > threshold[3] * 1.1) {
-      motors.setSpeeds(20,100);
+      motors.setSpeeds(20,150);
     } else if (lineSensorValues[3] < threshold[3] * 0.9) {
-      motors.setSpeeds(100,20);
+      motors.setSpeeds(150,20);
     } else {
       motors.setSpeeds(60,60);
     }
@@ -499,7 +499,7 @@ void removeBigCan() {
     turn(100, 90, 'r'); //Turn 90 degreees to the right
     moveForward(150, 27); //move forward for 35 cm
     turn(100, 90, 'l'); //Turn left 90 degrees times 2 (can't pick 180, cause then it just changes from 179 to -180 and not 180.
-    moveForward(100, 20);
+    moveForward(100, 15);
     turn(100, 90, 'l');
     delay(50);
     
