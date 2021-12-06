@@ -469,30 +469,45 @@ void followLine() {
 //Function for detecting which type of can is in front of the robot. Either big or small.
 void detectCan(){
   while(true){
-    proxSensors.read(); //Reads proximity sensors
+
+    //Reads proximity sensors
+    proxSensors.read(); 
+    //Retrieves the values from the read
     int proximityLeft = proxSensors.countsFrontWithLeftLeds();
-    int proximityRight = proxSensors.countsFrontWithRightLeds(); //Retrieves the values from the read
-    Serial.println("proxLeft: " + String(proximityLeft) + " // " + "proxRight: " + String(proximityRight));
+    int proximityRight = proxSensors.countsFrontWithRightLeds();
     //Serial print for analysis
-    if(proximityRight && proximityLeft >= 3){ //checks if it passes the threshold for the smallest can
+    Serial.println("proxLeft: " + String(proximityLeft) + " // " + "proxRight: " + String(proximityRight));
+
+    //checks if it passes the threshold for the smallest can
+    if(proximityRight && proximityLeft >= 3){
+      //delay while running the conveyor belt to let the can pass in front of the robot to avoid wrong decision based on preliminary reading.
       lineSensors.emittersOn();
-      delay(400); //delay to let the can pass in front of the robot to avoid wrong decision based on preliminary reading.
+      delay(400); 
       lineSensors.emittersOff();
+
+      //reads sensors and updates the value, since the can is now more in front of the robot
       proxSensors.read();
       int proximityLeft = proxSensors.countsFrontWithLeftLeds();
-      int proximityRight = proxSensors.countsFrontWithRightLeds(); //reads sensors and updates the value, since the can is now more in front of the robot
-      if(proximityRight && proximityLeft >= 7){ //Checks if it is a big can
+      int proximityRight = proxSensors.countsFrontWithRightLeds();
+
+      //Checks if it is a big can
+      if(proximityRight && proximityLeft >= 7){
         canType = 2; //Define can as type 2 = big can
-        Serial.println("Last reading big: proxLeft: " + String(proximityLeft) + " // " + "proxRight: " + String(proximityRight)); //Check what value triggered the if statement. Used for debugging
+        
+        //Check what value triggered the if statement. Used for debugging
+        Serial.println("Last reading big: proxLeft: " + String(proximityLeft) + " // " + "proxRight: " + String(proximityRight));
         stage = 4;
         break; //Can is identified: exit the void
       }
       else
       canType = 1; //Since it wasn't a big can, define it as can 1 = small can
-      Serial.println("Last reading small: proxLeft: " + String(proximityLeft) + " // " + "proxRight: " + String(proximityRight)); //Check what value triggered the if statement. Used for debugging
+
+      //Check what value triggered the if statement. Used for debugging
+      Serial.println("Last reading small: proxLeft: " + String(proximityLeft) + " // " + "proxRight: " + String(proximityRight));
       stage = 3;
       break; //Can is identified: exit the void
     }
+    //Run the conveyor belt briefly in order for cans to move to the front of the robot
     lineSensors.emittersOn();
     delay(50);
     lineSensors.emittersOff();
