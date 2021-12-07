@@ -509,7 +509,7 @@ void detectCan(){
     }
     //Run the conveyor belt briefly in order for cans to move to the front of the robot
     lineSensors.emittersOn();
-    delay(50);
+    delay(100);
     lineSensors.emittersOff();
   }
   //if none of the requirements are fulfilled, it loops back.
