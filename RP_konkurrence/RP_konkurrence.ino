@@ -525,7 +525,7 @@ void removeBigCan() {
     turn(100, 90, 'r'); //Turn 90 degreees to the right
     moveForward(150, 27); //move forward for 35 cm
     turn(100, 90, 'l'); //Turn left 90 degrees times 2 (can't pick 180, cause then it just changes from 179 to -180 and not 180.
-    moveForward(100, 15);
+    moveForward(100, 19);
     turn(100, 90, 'l');
     delay(50);
     
